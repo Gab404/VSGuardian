@@ -1,0 +1,535 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VSGuardian</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* Animation personnalisée pour la flèche droite */
+        @keyframes bounce-right {
+            0%, 100% { transform: translateX(-25%); animation-timing-function: cubic-bezier(0.8,0,1,1); }
+            50% { transform: none; animation-timing-function: cubic-bezier(0,0,0.2,1); }
+        }
+        .animate-bounce-right {
+            animation: bounce-right 1s infinite;
+        }
+    </style>
+</head>
+<body class="bg-slate-950 text-slate-100 p-4 md:p-8 font-sans min-h-screen">
+
+    <div class="max-w-6xl mx-auto">
+
+        <div class="flex items-center justify-between mb-8 bg-slate-900 border border-blue-800/50 p-4 rounded-2xl shadow-lg shadow-blue-900/20">
+            <h1 class="text-2xl md:text-3xl font-extrabold flex items-center tracking-wide text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-cyan-300">
+                <span id="pulse-dot" class="w-3 h-3 bg-blue-500 rounded-full mr-3 shadow-[0_0_10px_rgba(59,130,246,0.8)]"></span>
+                VSGuardian
+            </h1>
+            <div class="flex items-center gap-4">
+                <p class="text-slate-400 text-sm md:text-base font-medium">
+                    Status: <span id="status" class="text-blue-400">Connecting...</span>
+                </p>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-10">
+            <div class="flex flex-col items-center justify-center bg-slate-900 border border-blue-800/50 p-6 rounded-2xl shadow-lg lg:col-span-1">
+                <button id="mic-btn"
+                    class="bg-blue-600 hover:bg-blue-500 text-white rounded-full w-20 h-20 flex items-center justify-center text-3xl shadow-[0_0_20px_rgba(37,99,235,0.4)] transition-transform active:scale-90 mb-3 focus:outline-none ring-4 ring-blue-900/50">
+                    🎙️
+                </button>
+                <p id="mic-status" class="text-slate-400 text-sm font-medium tracking-wide">Tap to speak</p>
+            </div>
+
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-[1fr_80px_1fr] gap-y-4 gap-x-2 items-stretch">
+            
+            <div class="order-1 lg:col-start-1 lg:row-start-1 bg-slate-900 border border-blue-700/50 rounded-2xl p-6 shadow-xl shadow-blue-900/20 flex flex-col">
+                <h2 class="text-xl md:text-2xl font-extrabold text-white text-center uppercase tracking-widest mb-4 flex justify-center items-center gap-3">
+                    <span class="w-3 h-3 bg-blue-500 rounded-full animate-pulse"></span>
+                    Raw Transcription
+                </h2>
+                <div class="bg-slate-950 rounded-xl p-5 font-mono text-sm md:text-base h-72 overflow-y-auto border-inner border-slate-800 flex-grow" id="terminal-raw">
+                    <p class="text-slate-600" id="waiting-msg-raw">&gt;&gt; Waiting for audio stream...</p>
+                    <p id="rawFlow" class="leading-relaxed"></p>
+                </div>
+            </div>
+
+            <div class="order-2 lg:col-start-1 lg:row-start-2 flex justify-center py-2 text-cyan-500/70">
+                <svg class="w-10 h-10 animate-bounce" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 14l-7 7m0 0l-7-7m7 7V3"></path></svg>
+            </div>
+
+            <div class="order-3 lg:col-start-1 lg:row-start-3 bg-slate-900 border border-cyan-700/50 rounded-2xl p-5 shadow-xl flex flex-col">
+                <h3 class="text-sm md:text-base font-bold text-cyan-400 text-center uppercase tracking-widest mb-3 flex justify-center items-center gap-2">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path></svg>
+                    Protected Transcription
+                </h3>
+                <div class="bg-slate-950 rounded-xl p-4 font-mono text-xs md:text-sm h-48 overflow-y-auto border-inner border-slate-800 flex-grow" id="terminal-filtered">
+                    <p class="text-slate-600" id="waiting-msg-filtered">&gt;&gt; Waiting for filtering...</p>
+                    <p id="filteredFlow" class="leading-relaxed"></p>
+                </div>
+            </div>
+
+            <div class="order-4 lg:col-start-2 lg:row-start-3 flex justify-center items-center py-2 text-indigo-500/70">
+                <svg class="block lg:hidden w-10 h-10 animate-bounce" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 14l-7 7m0 0l-7-7m7 7V3"></path></svg>
+                <svg class="hidden lg:block w-12 h-12 animate-bounce-right" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path></svg>
+            </div>
+
+            <div class="order-5 lg:col-start-3 lg:row-start-3 bg-slate-900 border border-indigo-700/50 rounded-2xl p-5 shadow-xl flex flex-col">
+                <h3 class="text-sm md:text-base font-bold text-indigo-400 text-center uppercase tracking-widest mb-3 flex justify-center items-center gap-2">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 15a4 4 0 004 4h9a5 5 0 10-.1-9.999 5.002 5.002 0 10-9.78 2.096A4.001 4.001 0 003 15z"></path></svg>
+                    Protected LLM Cloud
+                </h3>
+                <div class="bg-slate-950 rounded-xl p-4 font-mono text-xs md:text-sm h-48 overflow-y-auto border-inner border-slate-800 flex-grow" id="terminal-cloud">
+                    <div class="flex flex-col items-center justify-center h-full text-indigo-900/50" id="waiting-msg-cloud">
+                        <svg class="w-8 h-8 animate-pulse mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 002-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path></svg>
+                        <span>Awaiting sanitized payload...</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="order-6 lg:col-start-3 lg:row-start-2 flex justify-center py-2 text-blue-500/70">
+                <svg class="block lg:hidden w-10 h-10 animate-bounce" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 14l-7 7m0 0l-7-7m7 7V3"></path></svg>
+                <svg class="hidden lg:block w-10 h-10 animate-bounce" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 10l7-7m0 0l7 7m-7-7v18"></path></svg>
+            </div>
+
+            <div class="order-7 lg:col-start-3 lg:row-start-1 bg-blue-900/20 border border-blue-500 rounded-2xl p-6 shadow-2xl shadow-blue-600/30 flex flex-col">
+                <h2 class="text-xl md:text-2xl font-extrabold text-blue-200 text-center uppercase tracking-widest mb-4 flex justify-center items-center gap-3">
+                    <svg class="w-7 h-7 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
+                    LLM Final Output
+                </h2>
+                <div class="bg-slate-950 rounded-xl p-6 font-mono text-sm md:text-base h-72 overflow-y-auto border-inner border-slate-800 text-blue-50 flex-grow" id="terminal-llm">
+                    <div class="flex h-full items-center justify-center" id="waiting-container-llm">
+                        <p class="text-slate-600 text-center" id="waiting-msg-llm">Waiting for final rehydrated response...</p>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+        <div class="mt-8 bg-slate-900 border border-slate-800 rounded-xl p-3 shadow-lg opacity-80 hover:opacity-100 transition-opacity">
+            <div class="bg-slate-950 rounded-lg p-3 font-mono text-xs h-24 overflow-y-auto" id="system-log">
+                <p class="text-slate-600">&gt;&gt; System log initialized</p>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+    // ==================================================================
+    // 1. Dashboard WebSocket (/ui-stream)
+    // ==================================================================
+    const wsProtocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+    const wsHost = window.location.host;
+
+    const statusEl          = document.getElementById('status');
+    const pulseDot          = document.getElementById('pulse-dot');
+    const systemLog         = document.getElementById('system-log');
+
+    // Context badges
+    const ctxNone    = document.getElementById('ctx-none');
+    const ctxBadges  = {
+        FINANCE: document.getElementById('ctx-finance'),
+        MEDICAL: document.getElementById('ctx-medical'),
+        CYBER:   document.getElementById('ctx-cyber'),
+        HR_LEGAL: document.getElementById('ctx-hr_legal'),
+    };
+
+    // Runtime metrics
+    const metricEnhance = document.getElementById('metric-enhance');
+    const metricRedact  = document.getElementById('metric-redact');
+    const metricLlm     = document.getElementById('metric-llm');
+
+    // Panels & Flow elements
+    const terminalRaw       = document.getElementById('terminal-raw');
+    let rawFlow             = document.getElementById('rawFlow');
+    const waitingMsgRaw     = document.getElementById('waiting-msg-raw');
+
+    const terminalFiltered  = document.getElementById('terminal-filtered');
+    let filteredFlow        = document.getElementById('filteredFlow');
+    const waitingMsgFiltered= document.getElementById('waiting-msg-filtered');
+
+    const terminalCloud     = document.getElementById('terminal-cloud');
+    const waitingMsgCloud   = document.getElementById('waiting-msg-cloud');
+
+    const terminalLlm        = document.getElementById('terminal-llm');
+    const waitingContainerLlm= document.getElementById('waiting-container-llm');
+
+    let partialRawEl = null;
+    let partialFilteredEl = null;
+    let firstTranscript = true;
+
+    let currentTtsSource = null;
+    let ttsPlayContext = null;
+
+    function updateContextBadges(contexts) {
+        const active = contexts && contexts.length > 0;
+        for (const badge of Object.values(ctxBadges)) {
+            badge.classList.add('hidden');
+            badge.classList.remove('animate-pulse');
+        }
+        if (!active) {
+            ctxNone.classList.remove('hidden');
+            return;
+        }
+        ctxNone.classList.add('hidden');
+        for (const [key, badge] of Object.entries(ctxBadges)) {
+            if (contexts.includes(key)) {
+                badge.classList.remove('hidden');
+                badge.classList.add('animate-pulse');
+                setTimeout(() => badge.classList.remove('animate-pulse'), 2000);
+            }
+        }
+    }
+
+    function highlightRedacted(text, baseClass) {
+        const parts = text.split(/(\[[A-ZÀÂÉÈÊËÏÎÔÙÛÜÇ\s\/_]+\])/g);
+        let html = '';
+        for (const part of parts) {
+            if (/^\[[A-ZÀÂÉÈÊËÏÎÔÙÛÜÇ\s\/_]+\]$/.test(part)) {
+                const escaped = part.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+                html += `<span class="bg-blue-900 text-blue-200 px-1.5 py-0.5 rounded font-bold text-xs mx-1">${escaped}</span>`;
+            } else if (part) {
+                const escaped = part.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+                html += `<span class="${baseClass}">${escaped}</span>`;
+            }
+        }
+        return html + ' ';
+    }
+
+    function connectUI() {
+        const uiWs = new WebSocket(`${wsProtocol}//${wsHost}/ui-stream`);
+
+        uiWs.onopen = () => {
+            statusEl.textContent = 'System Armed';
+            statusEl.className = 'text-blue-400 font-bold';
+            pulseDot.className = 'w-3 h-3 bg-blue-500 rounded-full animate-pulse mr-3 shadow-[0_0_10px_rgba(59,130,246,0.8)]';
+        };
+
+        uiWs.onmessage = (event) => {
+            const data = JSON.parse(event.data);
+
+            if (data.type === 'transcription') {
+                const rawText = data.raw_text || data.text;
+                const filteredText = data.text;
+                const isFinal = data.is_final !== false;
+
+                if (firstTranscript) {
+                    if (waitingMsgRaw) waitingMsgRaw.style.display = 'none';
+                    if (waitingMsgFiltered) waitingMsgFiltered.style.display = 'none';
+                    firstTranscript = false;
+                }
+
+                if (isFinal) {
+                    updateContextBadges(data.contexts || []);
+                    if (data.redact_ms !== undefined) {
+                        metricRedact.textContent = 'Redact: ' + data.redact_ms + 'ms';
+                    }
+
+                    if (data.vault_id) {
+                        const p = document.createElement('p');
+                        p.className = 'text-indigo-400 text-xs';
+                        p.textContent = '[vault] PII stored — session ' + data.vault_id;
+                        systemLog.appendChild(p);
+                        systemLog.scrollTop = systemLog.scrollHeight;
+                    }
+
+                    if (partialRawEl) { partialRawEl.remove(); partialRawEl = null; }
+                    if (rawText) {
+                        const span = document.createElement('span');
+                        span.className = 'text-blue-100';
+                        span.textContent = rawText + ' ';
+                        rawFlow.appendChild(span);
+                        terminalRaw.scrollTop = terminalRaw.scrollHeight;
+                    }
+                    if (partialFilteredEl) { partialFilteredEl.remove(); partialFilteredEl = null; }
+                    if (filteredText) {
+                        const span = document.createElement('span');
+                        span.innerHTML = highlightRedacted(filteredText, 'text-cyan-200');
+                        filteredFlow.appendChild(span);
+                        terminalFiltered.scrollTop = terminalFiltered.scrollHeight;
+                    }
+                } else {
+                    if (!partialRawEl) {
+                        partialRawEl = document.createElement('span');
+                        partialRawEl.className = 'text-slate-500 italic';
+                        rawFlow.appendChild(partialRawEl);
+                    }
+                    partialRawEl.textContent = rawText + '...';
+                    terminalRaw.scrollTop = terminalRaw.scrollHeight;
+
+                    if (!partialFilteredEl) {
+                        partialFilteredEl = document.createElement('span');
+                        partialFilteredEl.className = 'text-slate-500 italic';
+                        filteredFlow.appendChild(partialFilteredEl);
+                    }
+                    partialFilteredEl.textContent = rawText + '...';
+                    terminalFiltered.scrollTop = terminalFiltered.scrollHeight;
+                }
+            }
+
+            if (data.type === 'metrics') {
+                if (data.enhance_ms !== undefined) {
+                    metricEnhance.textContent = 'Enhance: ' + data.enhance_ms + 'ms';
+                }
+            }
+
+            if (data.type === 'status') {
+                const p = document.createElement('p');
+                p.className = 'text-blue-400 text-xs';
+                p.textContent = '[system] ' + data.text;
+                systemLog.appendChild(p);
+                systemLog.scrollTop = systemLog.scrollHeight;
+            }
+
+            if (data.type === 'error') {
+                const p = document.createElement('p');
+                p.className = 'text-red-400 text-xs';
+                p.textContent = '[error] ' + data.text;
+                systemLog.appendChild(p);
+                systemLog.scrollTop = systemLog.scrollHeight;
+            }
+
+            if (data.type === 'llm_answer') {
+                if (waitingContainerLlm) waitingContainerLlm.style.display = 'none';
+                if (waitingMsgCloud) waitingMsgCloud.style.display = 'none';
+
+                if (data.llm_ms !== undefined) {
+                    metricLlm.textContent = 'LLM: ' + data.llm_ms + 'ms';
+                }
+
+                // 1. Cloud Output
+                const redText = document.createElement('p');
+                redText.className = 'text-indigo-200 text-xs font-mono leading-relaxed mb-3 border-l-2 border-indigo-500 pl-2';
+                redText.innerHTML = highlightRedacted(data.redacted || '', 'text-indigo-200');
+                terminalCloud.appendChild(redText);
+                terminalCloud.scrollTop = terminalCloud.scrollHeight;
+
+                // 2. Final Output
+                const greenText = document.createElement('p');
+                greenText.className = 'text-white text-base leading-relaxed mb-4 block w-full';
+                greenText.innerHTML = highlightRedacted(data.rehydrated || data.redacted || '', 'text-blue-100');
+                terminalLlm.appendChild(greenText);
+                terminalLlm.scrollTop = terminalLlm.scrollHeight;
+
+                const logP = document.createElement('p');
+                logP.className = 'text-cyan-400 text-xs';
+                logP.textContent = '[llm] Final payload rendered (' + (data.llm_ms || '?') + 'ms)';
+                systemLog.appendChild(logP);
+                systemLog.scrollTop = systemLog.scrollHeight;
+            }
+
+            if (data.type === 'play_audio') {
+                if (data.audio_pcm_b64) {
+                    playPcmAudio(data.audio_pcm_b64);
+                    const logP = document.createElement('p');
+                    logP.className = 'text-blue-300 text-xs';
+                    logP.textContent = '[tts] Playing audio response...';
+                    systemLog.appendChild(logP);
+                    systemLog.scrollTop = systemLog.scrollHeight;
+                }
+            }
+        };
+
+        uiWs.onclose = () => {
+            statusEl.textContent = 'Disconnected';
+            statusEl.className = 'text-red-500 font-bold';
+            pulseDot.className = 'w-3 h-3 bg-red-600 rounded-full mr-3';
+            setTimeout(connectUI, 2000);
+        };
+
+        uiWs.onerror = () => uiWs.close();
+    }
+
+    connectUI();
+
+    // ==================================================================
+    // 2. Audio capture
+    // ==================================================================
+    const micBtn    = document.getElementById('mic-btn');
+    const micStatus = document.getElementById('mic-status');
+
+    let audioContext = null;
+    let sourceNode  = null;
+    let workletNode = null;
+    let audioWs     = null;
+    let isRecording = false;
+
+    const workletCode = `
+    class PCMProcessor extends AudioWorkletProcessor {
+        constructor() {
+            super();
+            this.buffer = [];
+            this.sampleCount = 0;
+            this.chunkSize = 12000;
+        }
+        process(inputs) {
+            const input = inputs[0];
+            if (input.length === 0) return true;
+            const channel = input[0];
+            for (let i = 0; i < channel.length; i++) {
+                this.buffer.push(channel[i]);
+            }
+            if (this.buffer.length >= this.chunkSize) {
+                this.port.postMessage({ samples: new Float32Array(this.buffer) });
+                this.buffer = [];
+            }
+            return true;
+        }
+    }
+    registerProcessor('pcm-processor', PCMProcessor);
+    `;
+
+    function float32ToBase64PCM(float32Array) {
+        const int16 = new Int16Array(float32Array.length);
+        for (let i = 0; i < float32Array.length; i++) {
+            let s = Math.max(-1, Math.min(1, float32Array[i]));
+            int16[i] = s < 0 ? s * 0x8000 : s * 0x7FFF;
+        }
+        const bytes = new Uint8Array(int16.buffer);
+        let binary = '';
+        for (let i = 0; i < bytes.length; i++) {
+            binary += String.fromCharCode(bytes[i]);
+        }
+        return btoa(binary);
+    }
+
+    async function startRecording() {
+        if (currentTtsSource) {
+            try { currentTtsSource.stop(); } catch(e) {}
+            currentTtsSource = null;
+        }
+
+        try {
+            audioWs = new WebSocket(`${wsProtocol}//${wsHost}/browser-audio`);
+            await new Promise((resolve, reject) => {
+                audioWs.onopen = resolve;
+                audioWs.onerror = reject;
+                setTimeout(() => reject(new Error('WS timeout')), 5000);
+            });
+
+            audioContext = new AudioContext({ sampleRate: 24000 });
+            const blob = new Blob([workletCode], { type: 'application/javascript' });
+            const url = URL.createObjectURL(blob);
+            await audioContext.audioWorklet.addModule(url);
+            URL.revokeObjectURL(url);
+
+            const stream = await navigator.mediaDevices.getUserMedia({
+                audio: { sampleRate: 24000, channelCount: 1, echoCancellation: true, noiseSuppression: true }
+            });
+
+            sourceNode = audioContext.createMediaStreamSource(stream);
+            
+            const gainNode = audioContext.createGain();
+            gainNode.gain.value = 2.5;
+
+            const highPassFilter = audioContext.createBiquadFilter();
+            highPassFilter.type = 'highpass';
+            highPassFilter.frequency.value = 300; 
+
+            const lowPassFilter = audioContext.createBiquadFilter();
+            lowPassFilter.type = 'lowpass';
+            lowPassFilter.frequency.value = 3400;
+
+            sourceNode.connect(gainNode);
+            gainNode.connect(highPassFilter);
+            highPassFilter.connect(lowPassFilter);
+
+            workletNode = new AudioWorkletNode(audioContext, 'pcm-processor');
+            workletNode.port.onmessage = (event) => {
+                if (audioWs && audioWs.readyState === WebSocket.OPEN) {
+                    const b64 = float32ToBase64PCM(event.data.samples);
+                    audioWs.send(JSON.stringify({ audio_b64: b64 }));
+                }
+            };
+
+            lowPassFilter.connect(workletNode);
+            workletNode.connect(audioContext.destination);
+
+            isRecording = true;
+            micBtn.classList.remove('bg-blue-600', 'hover:bg-blue-500', 'ring-blue-900/50');
+            micBtn.classList.add('bg-cyan-500', 'hover:bg-cyan-400', 'ring-cyan-500/50', 'animate-pulse');
+            micStatus.textContent = 'Listening... Tap to stop.';
+            micStatus.classList.add('text-cyan-300');
+            micStatus.classList.remove('text-slate-400');
+
+        } catch (err) {
+            console.error('Recording error:', err);
+            stopRecording();
+        }
+    }
+
+    function stopRecording() {
+        isRecording = false;
+        if (workletNode) { workletNode.disconnect(); workletNode = null; }
+        if (sourceNode) {
+            sourceNode.disconnect();
+            sourceNode.mediaStream.getTracks().forEach(t => t.stop());
+            sourceNode = null;
+        }
+        if (audioContext && audioContext.state !== 'closed') { audioContext.close(); audioContext = null; }
+        if (audioWs && audioWs.readyState === WebSocket.OPEN) {
+            audioWs.send(JSON.stringify({ type: 'stop' }));
+            setTimeout(() => { if (audioWs) { audioWs.close(); audioWs = null; } }, 2500);
+        } else {
+            audioWs = null;
+        }
+
+        const newRawP = document.createElement('p');
+        newRawP.className = 'leading-relaxed mt-2 border-t border-slate-800 pt-2';
+        terminalRaw.appendChild(newRawP);
+        rawFlow = newRawP;
+        partialRawEl = null;
+
+        const newFilteredP = document.createElement('p');
+        newFilteredP.className = 'leading-relaxed mt-2 border-t border-slate-800 pt-2';
+        terminalFiltered.appendChild(newFilteredP);
+        filteredFlow = newFilteredP;
+        partialFilteredEl = null;
+
+        micBtn.classList.add('bg-blue-600', 'hover:bg-blue-500', 'ring-blue-900/50');
+        micBtn.classList.remove('bg-cyan-500', 'hover:bg-cyan-400', 'ring-cyan-500/50', 'animate-pulse');
+        micStatus.textContent = 'Tap to speak';
+        micStatus.classList.remove('text-cyan-300');
+        micStatus.classList.add('text-slate-400');
+    }
+
+    micBtn.addEventListener('click', () => {
+        if (!isRecording) startRecording(); else stopRecording();
+    });
+
+    // ==================================================================
+    // 3. Audio playback
+    // ==================================================================
+    async function playPcmAudio(base64String) {
+        try {
+            if (currentTtsSource) { try { currentTtsSource.stop(); } catch(e) {} currentTtsSource = null; }
+            const binaryString = atob(base64String);
+            const len = binaryString.length;
+            const bytes = new Uint8Array(len);
+            for (let i = 0; i < len; i++) bytes[i] = binaryString.charCodeAt(i);
+            
+            const int16Array = new Int16Array(bytes.buffer);
+            const float32Array = new Float32Array(int16Array.length);
+            for (let i = 0; i < int16Array.length; i++) float32Array[i] = int16Array[i] / 32768.0; 
+            
+            if (!ttsPlayContext || ttsPlayContext.state === 'closed') {
+                ttsPlayContext = new (window.AudioContext || window.webkitAudioContext)({ sampleRate: 48000 });
+            }
+            
+            const audioBuffer = ttsPlayContext.createBuffer(1, float32Array.length, 48000);
+            audioBuffer.copyToChannel(float32Array, 0);
+
+            const source = ttsPlayContext.createBufferSource();
+            source.buffer = audioBuffer;
+            source.connect(ttsPlayContext.destination);
+
+            currentTtsSource = source;
+            source.onended = () => { if (currentTtsSource === source) currentTtsSource = null; };
+            source.start(0);
+        } catch (err) { console.error("Audio play error:", err); }
+    }
+    </script>
+</body>
+</html>

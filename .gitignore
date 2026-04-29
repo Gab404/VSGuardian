@@ -1,0 +1,72 @@
+# Environment variables and secrets
+.env
+.env.local
+.env.*.local
+
+# Sensitive files
+*.pem
+*.key
+*.pfx
+*.p12
+*.crt
+*.cer
+*.jks
+*.keystore
+
+# PII and vault files
+secure_vault.json
+vault_*.json
+*.vault
+
+# IDE and OS
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+Thumbs.db
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Virtual environments
+venv/
+env/
+ENV/
+
+# Logs
+*.log
+logs/
+
+# Audio files (may contain sensitive data)
+*.wav
+*.mp3
+*.flac
+
+# Models directory (can be large)
+models/
+
+# Temporary files
+tmp/
+temp/
+*.tmp
