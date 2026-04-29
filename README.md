@@ -1,4 +1,4 @@
-# VS (Voice Security) Guardian Protocol
+# Voice Security Guardian Protocol
 
 Real-time speech-to-text privacy middleware for call centers. Captures audio from the browser microphone, cleans it with ai|coustics noise cancellation, streams it to Gradium STT for live transcription, and displays results on a real-time dashboard.
 
