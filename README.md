@@ -67,7 +67,7 @@ FastAPI Backend (main.py)
 ## Project structure
 
 ```
-BerlinHack/
+VSGuardian/
 ├── main.py                # FastAPI backend — mic → ai|coustics → Gradium STT → Fastino → Groq → dashboard
 ├── audio_enhancer.py      # ai|coustics FFI wrapper (resample + 10ms frame processing)
 ├── fastino_engine.py      # Fastino Privacy Shield — regex + GLiNER PII redaction engine
@@ -77,14 +77,10 @@ BerlinHack/
 ├── dashboard.py           # Dashboard backend helpers
 ├── tts_engine.py          # Text-to-speech engine
 ├── index.html             # Dashboard — dark UI with mic button + live transcript
-├── secure_vault.json      # Runtime PII vault (session-scoped, never persisted)
-├── alerte_vocale.wav      # Audio alert asset
 ├── models/                # Local model files (ai|coustics Quail weights)
 ├── src/                   # 
 │   └── agent.py           # LiveKit agent with ai|coustics (standalone alternative)
-├── .env                   # API keys (Gradium, ai|coustics, Groq, Pioneer)
 ├── .env.example           # Environment variable template
-├── myEnvVar.sh            # Shell script to export env vars locally
 ├── requirements.txt       # Python dependencies
 └── README.md
 ```
